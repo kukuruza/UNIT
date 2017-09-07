@@ -5,7 +5,7 @@ Copyright (C) 2017 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-ND 4.0 license (https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode).
 """
 
-
+import time
 import sys
 from tools import *
 from trainers import *
@@ -83,6 +83,8 @@ def get_model_list(dirname, key):
   return last_model_name
 
 def resume(trainer, snapshot_prefix):
+  print('Loading G and D models... ', end='')
+  start = time.time()
   dirname = os.path.dirname(snapshot_prefix)
   last_model_name = get_model_list(dirname,"gen")
   if last_model_name is None:
@@ -91,12 +93,17 @@ def resume(trainer, snapshot_prefix):
   iterations = int(last_model_name[-12:-4])
   last_model_name = get_model_list(dirname, "dis")
   trainer.dis.load_state_dict(torch.load(last_model_name))
+  print('loaded in %.1f sec.' % (time.time()-start))
   print('Resume from iteration %d' % iterations)
   return iterations
 
 def get_data_loader(conf, batch_size, context=0):
   data_a = []
-  exec ("data_a=%s(conf['root'],conf['folder'],conf['list'],conf['image_size'],conf['scale'],context)"%conf['class_name'])
+  if 'mnist' in conf['class_name'] or 'svhn' in conf['class_name']:
+    assert context == 0, '__getitem__ supports only context=0'
+    exec ("data_a = %s(conf)" % conf['class_name'])
+  else:
+    exec ("data_a=%s(conf['root'],conf['folder'],conf['list'],conf['image_size'],conf['scale'],context)"%conf['class_name'])
   return torch.utils.data.DataLoader(dataset=data_a, batch_size=batch_size, shuffle=True)
 
 def write_html(filename, iterations, image_save_iterations, image_directory, image_size):
@@ -112,7 +119,7 @@ def write_html(filename, iterations, image_save_iterations, image_directory, ima
   <body>
   ''')
   html_file.write("<h3>current</h3>")
-  img_filename = '%s/gen.jpg' % (image_directory)
+  img_filename = 'images/gen.jpg'
   html_file.write("""
         <p>
         <a href="%s">
@@ -122,7 +129,7 @@ def write_html(filename, iterations, image_save_iterations, image_directory, ima
         """ % (img_filename, img_filename, all_size))
   for j in range(iterations,image_save_iterations-1,-1):
     if j % image_save_iterations == 0:
-      img_filename = '%s/gen_%08d.jpg' % (image_directory, j)
+      img_filename = 'images/gen_%08d.jpg' % (j)
       html_file.write("<h3>iteration [%d]</h3>" % j)
       html_file.write("""
             <p>

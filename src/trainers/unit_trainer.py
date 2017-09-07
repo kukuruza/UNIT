@@ -2,6 +2,7 @@
 Copyright (C) 2017 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-ND 4.0 license (https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode).
 """
+import time
 from unit_nets import *
 from init import *
 import itertools
@@ -144,6 +145,8 @@ class CoVAEGAN4DATrainer(nn.Module):
     return
 
   def resume(self, snapshot_prefix):
+    print('Loading G and D models... ', end='')
+    start = time.time()
     dirname = os.path.dirname(snapshot_prefix)
     last_model_name = get_model_list(dirname,"gen")
     if last_model_name is None:
@@ -152,6 +155,7 @@ class CoVAEGAN4DATrainer(nn.Module):
     iterations = int(last_model_name[-12:-4])
     last_model_name = get_model_list(dirname, "dis")
     self.dis.load_state_dict(torch.load(last_model_name))
+    print('loaded in %.1f sec.' % (time.time()-start))
     print('Resume from iteration %d' % iterations)
     return iterations
 
@@ -284,6 +288,8 @@ class CoVAEGAN4DAXYCTrainer(nn.Module):
     return
 
   def resume(self, snapshot_prefix):
+    print('Loading G and D models... ', end='')
+    start = time.time()
     dirname = os.path.dirname(snapshot_prefix)
     last_model_name = get_model_list(dirname,"gen")
     if last_model_name is None:
@@ -292,6 +298,7 @@ class CoVAEGAN4DAXYCTrainer(nn.Module):
     iterations = int(last_model_name[-12:-4])
     last_model_name = get_model_list(dirname, "dis")
     self.dis.load_state_dict(torch.load(last_model_name))
+    print('loaded in %.1f sec.' % (time.time()-start))
     print('Resume from iteration %d' % iterations)
     return iterations
 
@@ -342,8 +349,20 @@ class UNITTrainer(nn.Module):
     super(UNITTrainer, self).__init__()
     true_input_dims = input_dims
     true_output_dims = input_dims
-    exec( 'self.dis = %s(ch, true_input_dims)' % dis)
-    exec( 'self.gen = %s(ch, true_input_dims, true_output_dims, image_size)' % gen )
+    if dis == 'CoDis32x32':
+      self.dis = CoDis32x32(ch, true_input_dims)
+    elif dis == 'CoDis':
+      self.dis = CoDis(ch, true_input_dims)
+    else:
+      print ('WARNING: dis: %s' % dis)
+      exec( 'self.dis = %s(ch, true_input_dims)' % dis)
+    if gen == 'CoVAE32x32':
+      self.gen = CoVAE32x32(ch, true_input_dims, true_output_dims)
+    elif gen == 'CoVAE':
+      self.gen = CoVAE(ch, true_input_dims, true_output_dims, image_size)
+    else:
+      print ('WARNING: dis: %s' % gen)
+      exec( 'self.gen = %s(ch, true_input_dims, true_output_dims, image_size)' % gen )
     self.dis_opt = torch.optim.Adam(self.dis.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=0.0001)
     self.gen_opt = torch.optim.Adam(self.gen.parameters(), lr=lr, betas=(0.5, 0.999), weight_decay=0.0001)
     n_per_side = image_size/self.dis.input_size

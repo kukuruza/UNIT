@@ -4,7 +4,7 @@
 Copyright (C) 2017 NVIDIA Corporation.  All rights reserved.
 Licensed under the CC BY-NC-ND 4.0 license (https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode).
 """
-
+import time
 import sys
 import os
 from trainers import *
@@ -84,7 +84,9 @@ def main(argv):
 
   # Prepare network
   trainer = UNITTrainer(gen_net, dis_net, batch_size, ch, input_dims, image_size)
+  start = time.time()
   trainer.gen.load_state_dict(torch.load(opts.weights))
+  print('Loaded G model in %.1f sec.' % (time.time()-start))
   trainer.cuda(opts.gpu)
 
   img = prepare_data(opts.image_name, image_size)
@@ -105,9 +107,9 @@ def main(argv):
 
   final_data = standardize_image(final_data)
   output_data = standardize_image(output_data[0])
-  assembled_images = torch.cat((final_data, output_data), 3)
+  #assembled_images = torch.cat((final_data, output_data), 3)
 
-  torchvision.utils.save_image(assembled_images.data / 2.0 + 0.5, opts.output_image_name)
+  torchvision.utils.save_image(output_data.data / 2.0 + 0.5, opts.output_image_name)
 
   return 0
 

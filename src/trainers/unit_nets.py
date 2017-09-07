@@ -244,10 +244,12 @@ class CoDis32x32(nn.Module):
         nn.MaxPool2d(kernel_size=stride)
       )
 
-  def __init__(self, ch=64, input_dim_a=3, input_dim_b=1):
+  def __init__(self, ch, input_dims):
+    ''' ch=64, input_dims=[3, 1] '''
     super(CoDis32x32, self).__init__()
-    self.conv0_a = self._conv2d(input_dim_a, ch, kernel_size=5, stride=2, padding=2)
-    self.conv0_b = self._conv2d(input_dim_b, ch, kernel_size=5, stride=2, padding=2)
+    self.input_size = 128
+    self.conv0_a = self._conv2d(input_dims[0], ch, kernel_size=5, stride=2, padding=2)
+    self.conv0_b = self._conv2d(input_dims[1], ch, kernel_size=5, stride=2, padding=2)
     self.conv1 = self._conv2d(ch * 1, ch * 2, kernel_size=5, stride=2, padding=2)
     self.conv2 = self._conv2d(ch * 2, ch * 4, kernel_size=5, stride=2, padding=2)
     self.conv3 = self._conv2d(ch * 4, ch * 8, kernel_size=5, stride=2, padding=2)
@@ -306,11 +308,12 @@ class CoVAE32x32(nn.Module):
       nn.LeakyReLU()
     )
 
-  def __init__(self, ch=32, input_dim_a=3, output_dim_a=3, input_dim_b=1, output_dim_b=1):
+  def __init__(self, ch, input_dims, output_dims):
+    ''' ch=32, input_dims=[3, 1], output_dims=[3, 1] '''
     super(CoVAE32x32, self).__init__()
     # Encoder layer #0
-    self.g_en_conv0_a = self._conv2d(input_dim_a, ch, kernel_size=5, stride=2, padding=2)
-    self.g_en_conv0_b = self._conv2d(input_dim_b, ch, kernel_size=5, stride=2, padding=2)
+    self.g_en_conv0_a = self._conv2d(input_dims[0], ch, kernel_size=5, stride=2, padding=2)
+    self.g_en_conv0_b = self._conv2d(input_dims[1], ch, kernel_size=5, stride=2, padding=2)
     self.g_en_conv1 = self._conv2d(ch * 1, ch * 2, kernel_size=5, stride=2, padding=2)
     self.g_en_conv2 = self._conv2d(ch * 2, ch * 4, kernel_size=8, stride=1, padding=0)
     self.g_en_conv3 = self._conv2d(ch * 4, ch * 8, kernel_size=1, stride=1, padding=0)
@@ -323,8 +326,8 @@ class CoVAE32x32(nn.Module):
     self.g_de_conv3_a = self._convtranspose2d(ch * 2, ch * 1, kernel_size=4, stride=2, padding=1)
     self.g_de_conv3_b = self._convtranspose2d(ch * 2, ch * 1, kernel_size=4, stride=2, padding=1)
     # Decoder layer #4
-    self.de_conv4_a = nn.ConvTranspose2d(ch * 1, output_dim_a, kernel_size=1, stride=1, padding=0)
-    self.de_conv4_b = nn.ConvTranspose2d(ch * 1, output_dim_b, kernel_size=1, stride=1, padding=0)
+    self.de_conv4_a = nn.ConvTranspose2d(ch * 1, output_dims[0], kernel_size=1, stride=1, padding=0)
+    self.de_conv4_b = nn.ConvTranspose2d(ch * 1, output_dims[1], kernel_size=1, stride=1, padding=0)
     self.de_tanh4_a = nn.Tanh()
     self.de_tanh4_b = nn.Tanh()
 

@@ -1,0 +1,33 @@
+# Copyright (C) 2017 NVIDIA Corporation.  All rights reserved.
+# Licensed under the CC BY-NC-ND 4.0 license (https://creativecommons.org/licenses/by-nc-nd/4.0/legalcode).
+train:
+  snapshot_save_iterations: 1000  # How often do you want to save trained models
+  image_save_iterations: 500     # How often do you want to save output images during training
+  display: 10                    # How often do you want to log the training stats
+  snapshot_prefix: ../outputs/svhn2mnist_0/svhn2mnist_0 # Where do you want to save the outputs
+  hyperparameters:
+    trainer: CoVAE-GAN # for domain adaptation
+    gen: CoVAE
+    dis: CoDis
+    ch: 64         # base channel number per layer
+    vae_enc_w: 1.0e-05  # weight on the KL divergence loss
+    vae_ll_w: 1.0e-04   # weight on the L1 reconstruction loss
+    #vae_enc_w: 0.0001  # weight on the KL divergence loss
+    #vae_ll_w: 0.001    # weight on the L1 reconstruction loss
+    gan_w: 1.0         # weight on the adversarial loss
+    batch_size: 16     # image batch size per domain
+    test_batch_size: 100
+    max_iterations: 200000 # maximum number of training epochs
+  datasets:
+    a: # Domain 1 dataset
+      class_name: dataset_svhn32x32_0_extra # dataset class
+      root: ../datasets/svhn/
+      channels: 3       # RGB -> 3 channels, Grayscale -> 1 channel
+      image_size: 64
+      scale: 1
+    b: # Domain 2 dataset
+      class_name: dataset_mnist32x32_0_train # dataset class
+      root: ../datasets/mnist/
+      channels: 1
+      image_size: 64
+      scale: 1
