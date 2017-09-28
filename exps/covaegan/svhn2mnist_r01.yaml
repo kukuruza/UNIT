@@ -17,6 +17,7 @@ train:
     cls_w: 10.0        # weight on classification accuracy
     gan_w: 1.0         # weight on the adversarial loss
     batch_size: 64     # image batch size per domain
+    ch: 64              # base channel number per layer
     test_batch_size: 100
     max_iterations: 200000 # maximum number of training epochs
     input_dim_a: 3
